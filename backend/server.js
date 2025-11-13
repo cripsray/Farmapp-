@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+const path = require('path');
 require('dotenv').config();
 
 const app = express();
@@ -12,7 +13,7 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Rutas
+// Rutas del backend
 const authRoutes = require('./routes/auth');
 const productosRoutes = require('./routes/productos');
 const carritoRoutes = require('./routes/carrito');
@@ -23,13 +24,24 @@ app.use('/api/productos', productosRoutes);
 app.use('/api/carrito', carritoRoutes);
 app.use('/api/pagos', pagosRoutes);
 
-// Ruta de prueba
+// Ruta de prueba de API
 app.get('/api', (req, res) => {
   res.json({ 
     message: 'FarmApp API está funcionando',
     version: '1.0.0'
   });
 });
+
+// Servir frontend React en producción
+if (process.env.NODE_ENV === 'production') {
+  const frontendPath = path.join(__dirname, '../frontend/build');
+  app.use(express.static(frontendPath));
+
+  // Capturar cualquier ruta que no sea /api y enviar index.html
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(frontendPath, 'index.html'));
+  });
+}
 
 // Manejo de errores
 app.use((err, req, res, next) => {
@@ -45,4 +57,3 @@ app.listen(PORT, () => {
 });
 
 module.exports = app;
-
